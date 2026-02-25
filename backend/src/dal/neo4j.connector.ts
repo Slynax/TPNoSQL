@@ -205,7 +205,7 @@ export class Neo4jConnector implements DatabaseConnector {
   }): Promise<ViralCountResult> {
     const session = this.getSession();
     try {
-      // depth=0: baseline — count all buyers with no follower traversal
+      // depth=0: baseline, count all buyers with no follower traversal
       if (params.depth === 0) {
         const result = await session.run(
           `MATCH (buyer:User)-[:PURCHASED]->(p:Product {id: $productId})

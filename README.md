@@ -1,39 +1,16 @@
 # TP NoSQL - Comparaison PostgreSQL vs Neo4j
 
+> **Rapport du TP : [rapport.md](./rapport.md)**
+
 Application web permettant de comparer les performances de PostgreSQL et Neo4j sur un cas de réseau social avec analyse de comportement d'achat.
 
-## Prérequis
-
-- Node.js 18+
-- Docker & Docker Compose
-
 ## Lancement
-
-### 1. Démarrer les bases de données
 
 ```bash
 docker compose up -d
 ```
 
-### 2. Démarrer le backend
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-Le backend tourne sur `http://localhost:3001`.
-
-### 3. Démarrer le frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Le frontend tourne sur `http://localhost:5173`.
+L'application est accessible sur `http://localhost`.
 
 ## Utilisation
 

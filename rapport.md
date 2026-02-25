@@ -1,4 +1,4 @@
-# TP NoSQL — Rapport
+# TP NoSQL - Rapport
 
 **Rémy LOURON · Killian PAVY**
 
@@ -58,9 +58,9 @@ Déploiement complet via `docker compose up` : PostgreSQL, Neo4j, backend et fro
 
 ## 4. Requêtes implémentées
 
-### Q1 — Produits achetés par le cercle de followers (niveau 1…n)
+### Q1 - Produits achetés par le cercle de followers (niveau 1..n)
 
-**PostgreSQL** — CTE récursive, déduplication par `DISTINCT` :
+**PostgreSQL** (CTE récursive, déduplication par `DISTINCT`) :
 ```sql
 WITH RECURSIVE follower_circle AS (
   SELECT followed_id AS user_id, 1 AS level FROM follows WHERE follower_id = $1
@@ -75,7 +75,7 @@ JOIN products p ON p.id = pu.product_id
 GROUP BY p.id, p.name, p.price ORDER BY count DESC
 ```
 
-**Neo4j** — traversée variable-length, `WITH DISTINCT` :
+**Neo4j** (traversée variable-length, `WITH DISTINCT`) :
 ```cypher
 MATCH (u:User {id: $userId})-[:FOLLOWS*1..n]->(follower:User)
 WITH DISTINCT follower
@@ -83,11 +83,11 @@ MATCH (follower)-[:PURCHASED]->(p:Product)
 RETURN p.id, p.name, p.price, count(follower) AS count ORDER BY count DESC
 ```
 
-### Q2 — Produit spécifique par cercle de followers
+### Q2 - Produit spécifique par cercle de followers
 
 Même logique que Q1 avec un filtre supplémentaire sur `product_id` / `{id: $productId}`.
 
-### Q3 — Viralité d'un produit à profondeur n
+### Q3 - Viralité d'un produit à profondeur n
 
 Compte le nombre d'acheteurs du produit dans le cercle de followers des autres acheteurs. `depth=0` fournit le baseline (total acheteurs sans traversée).
 
@@ -138,7 +138,7 @@ Jeu de données : **10 000 utilisateurs**, **1 000 produits**, ~100 000 relation
 
 ### 5.2 Requêtes (en ms)
 
-**Q1 — Produits par cercle (userId=1)**
+**Q1 - Produits par cercle (userId=1)**
 
 | Profondeur | PostgreSQL | Neo4j |
 |-----------|-----------|-------|
@@ -147,7 +147,7 @@ Jeu de données : **10 000 utilisateurs**, **1 000 produits**, ~100 000 relation
 | 3 | 33 ms | 102 ms |
 | 5 | 73 ms | 127 ms |
 
-**Q2 — Produit spécifique par cercle (userId=1, productId=1)**
+**Q2 - Produit spécifique par cercle (userId=1, productId=1)**
 
 | Profondeur | PostgreSQL | Neo4j |
 |-----------|-----------|-------|
@@ -156,7 +156,7 @@ Jeu de données : **10 000 utilisateurs**, **1 000 produits**, ~100 000 relation
 | 3 | 24 ms | 92 ms |
 | 5 | 64 ms | 130 ms |
 
-**Q3 — Viralité d'un produit (productId=1)**
+**Q3 - Viralité d'un produit (productId=1)**
 
 | Profondeur | PostgreSQL | Neo4j |
 |-----------|-----------|-------|
@@ -172,23 +172,23 @@ Jeu de données : **10 000 utilisateurs**, **1 000 produits**, ~100 000 relation
 
 ### Injection
 
-PostgreSQL injecte ~2,6× plus vite que Neo4j. L'insertion en masse dans des tables relationnelles (avec `INSERT … VALUES …` batchés) est bien optimisée. Neo4j doit créer des nœuds et des relations avec résolution d'identité (`UNWIND + MATCH + CREATE`), ce qui est intrinsèquement plus coûteux pour de l'injection séquentielle.
+PostgreSQL injecte ~2,6x plus vite que Neo4j. L'insertion en masse dans des tables relationnelles (avec `INSERT ... VALUES ...` batchés) est bien optimisée. Neo4j doit créer des noeuds et des relations avec résolution d'identité (`UNWIND + MATCH + CREATE`), ce qui est intrinsèquement plus coûteux pour de l'injection séquentielle.
 
 ### Requêtes Q1 et Q2
 
-PostgreSQL est généralement plus rapide sur ce jeu de données. La CTE récursive profite du cache de plan de requête à partir de la profondeur 2 (le saut de 239 ms → 18 ms entre depth=1 et depth=2 correspond au premier appel à froid). Neo4j reste constant (~100-130 ms) car il recalcule la traversée à chaque requête sans hot cache de résultats.
+PostgreSQL est généralement plus rapide sur ce jeu de données. La CTE récursive profite du cache de plan de requête à partir de la profondeur 2 (le saut de 239 ms -> 18 ms entre depth=1 et depth=2 correspond au premier appel à froid). Neo4j reste constant (~100-130 ms) car il recalcule la traversée à chaque requête sans hot cache de résultats.
 
 ### Requête Q3 (viralité)
 
-Le résultat le plus intéressant : **à profondeur 5, Neo4j est 2× plus rapide que PostgreSQL** (365 ms vs 770 ms). La récursion profonde sur les relations de suivi est le cas d'usage natif d'une base graphe. La CTE récursive de PostgreSQL peine à gérer l'explosion combinatoire à grande profondeur, tandis que Neo4j traverse les arêtes en mémoire via son index-free adjacency.
+Le résultat le plus intéressant : **à profondeur 5, Neo4j est 2x plus rapide que PostgreSQL** (365 ms vs 770 ms). La récursion profonde sur les relations de suivi est le cas d'usage natif d'une base graphe. La CTE récursive de PostgreSQL peine à gérer l'explosion combinatoire à grande profondeur, tandis que Neo4j traverse les arêtes en mémoire via son index-free adjacency.
 
 ### Conclusion
 
 | Critère | PostgreSQL | Neo4j |
 |---------|-----------|-------|
 | Injection en masse | ✅ Très rapide | ❌ Plus lent |
-| Requêtes peu profondes (depth 1-3) | ✅ Plus rapide | — |
-| Traversées profondes (depth ≥ 5) | ❌ Dégradation | ✅ Plus efficace |
+| Requêtes peu profondes (depth 1-3) | ✅ Plus rapide | - |
+| Traversées profondes (depth >= 5) | ❌ Dégradation | ✅ Plus efficace |
 | Modélisation réseau social | Possible (CTE récursive) | Natif (graphe) |
 
-Pour une application nécessitant des **analyses de type graphe à grande profondeur** (chaînes d'influence, détection de communautés), Neo4j est le choix adapté. Pour des **charges d'écriture importantes ou des requêtes peu profondes**, PostgreSQL reste plus performant. Une architecture hybride — PostgreSQL pour les données transactionnelles, Neo4j pour l'analyse de réseau — représenterait la solution optimale à l'échelle de la production (1 M utilisateurs).
+Pour une application nécessitant des **analyses de type graphe à grande profondeur** (chaînes d'influence, détection de communautés), Neo4j est le choix adapté. Pour des **charges d'écriture importantes ou des requêtes peu profondes**, PostgreSQL reste plus performant. Une architecture hybride (PostgreSQL pour les données transactionnelles, Neo4j pour l'analyse de réseau) représenterait la solution optimale à l'échelle de la production (1 M utilisateurs).
