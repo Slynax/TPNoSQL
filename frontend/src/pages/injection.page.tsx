@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DbSelector } from "@/components/db-selector";
 import { injectData } from "@/helpers/api_client";
-import type { DatabaseType, InjectionResponse } from "@/types/api";
+import type { DatabaseType, InjectionDatabase, InjectionResponse } from "@/types/api";
 import { Loader2 } from "lucide-react";
 
 export function InjectionPage() {
@@ -25,12 +25,8 @@ export function InjectionPage() {
     setError(null);
     setResults([]);
     try {
-      const targets: DatabaseType[] = both ? ["postgres", "neo4j"] : [database];
-      const responses: InjectionResponse[] = [];
-      for (const db of targets) {
-        const res = await injectData({ database: db, userCount, productCount, maxFollowers, maxPurchases });
-        responses.push(res);
-      }
+      const db: InjectionDatabase = both ? "both" : database;
+      const responses = await injectData({ database: db, userCount, productCount, maxFollowers, maxPurchases });
       setResults(responses);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

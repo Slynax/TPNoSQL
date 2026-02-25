@@ -1,7 +1,8 @@
 export type DatabaseType = "postgres" | "neo4j";
+export type InjectionDatabase = DatabaseType | "both";
 
 export interface InjectionParams {
-  database: DatabaseType;
+  database: InjectionDatabase;
   userCount: number;
   productCount: number;
   maxFollowers: number;

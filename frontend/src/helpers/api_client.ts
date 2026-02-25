@@ -22,7 +22,7 @@ async function post<TReq, TRes>(url: string, body: TReq): Promise<TRes> {
   return response.json();
 }
 
-export function injectData(params: InjectionParams): Promise<InjectionResponse> {
+export function injectData(params: InjectionParams): Promise<InjectionResponse[]> {
   return post("/inject", params);
 }
 
