@@ -1,6 +1,5 @@
 import type { DatabaseType } from "@/types/api";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface DbSelectorProps {
   value: DatabaseType;
