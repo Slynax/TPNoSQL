@@ -20,7 +20,7 @@ export function QueriesPage() {
   const [queryId, setQueryId] = useState<1 | 2 | 3>(1);
   const [userId, setUserId] = useState(1);
   const [productId, setProductId] = useState(1);
-  const [depth, setDepth] = useState(2);
+  const [depth, setDepth] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export function QueriesPage() {
               )}
               <div className="space-y-2">
                 <Label htmlFor="depth">Profondeur</Label>
-                <Input id="depth" type="number" min={1} max={10} value={depth} onChange={(e) => setDepth(Number(e.target.value))} />
+                <Input id="depth" type="number" min={0} max={10} value={depth} onChange={(e) => setDepth(Number(e.target.value))} />
               </div>
             </div>
 

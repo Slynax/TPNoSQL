@@ -236,6 +236,16 @@ export class PostgresConnector implements DatabaseConnector {
     depth: number;
   }): Promise<ViralCountResult> {
     const { productId, depth } = params;
+
+    // depth=0: baseline — count all buyers with no follower traversal
+    if (depth === 0) {
+      const result = await this.pool.query(
+        `SELECT COUNT(*)::int AS count FROM purchases WHERE product_id = $1`,
+        [productId]
+      );
+      return { productId, count: result.rows[0]?.count ?? 0, depth: 0 };
+    }
+
     const result = await this.pool.query(
       `
       WITH RECURSIVE buyers AS (

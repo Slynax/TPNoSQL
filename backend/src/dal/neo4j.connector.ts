@@ -134,9 +134,10 @@ export class Neo4jConnector implements DatabaseConnector {
     userId: number;
     depth: number;
   }): Promise<QueryResult> {
+    if (params.depth < 1) return { products: [], totalCount: 0 };
     const session = this.getSession();
     try {
-      const depth = Math.max(1, Math.floor(params.depth));
+      const depth = Math.floor(params.depth);
       const result = await session.run(
         `MATCH (u:User {id: $userId})-[:FOLLOWS*1..${depth}]->(follower:User)
          WITH DISTINCT follower
@@ -167,9 +168,10 @@ export class Neo4jConnector implements DatabaseConnector {
     productId: number;
     depth: number;
   }): Promise<QueryResult> {
+    if (params.depth < 1) return { products: [], totalCount: 0 };
     const session = this.getSession();
     try {
-      const depth = Math.max(1, Math.floor(params.depth));
+      const depth = Math.floor(params.depth);
       const result = await session.run(
         `MATCH (u:User {id: $userId})-[:FOLLOWS*1..${depth}]->(follower:User)
          WITH DISTINCT follower
@@ -203,7 +205,21 @@ export class Neo4jConnector implements DatabaseConnector {
   }): Promise<ViralCountResult> {
     const session = this.getSession();
     try {
-      const depth = Math.max(1, Math.floor(params.depth));
+      // depth=0: baseline — count all buyers with no follower traversal
+      if (params.depth === 0) {
+        const result = await session.run(
+          `MATCH (buyer:User)-[:PURCHASED]->(p:Product {id: $productId})
+           RETURN count(buyer) AS count`,
+          { productId: neo4j.int(params.productId) }
+        );
+        return {
+          productId: params.productId,
+          count: result.records[0] ? toNumber(result.records[0].get("count")) : 0,
+          depth: 0,
+        };
+      }
+
+      const depth = Math.floor(params.depth);
       const result = await session.run(
         `MATCH (buyer:User)-[:PURCHASED]->(p:Product {id: $productId})
          WITH buyer, p
