@@ -2,7 +2,7 @@
 
 **Rémy LOURON · Killian PAVY**
 
-> **Lien du repo Github : [Repo Github](https://github.com/Slynax/TPNoSQL)**
+> **Lien du repo Github : https://github.com/Slynax/TPNoSQL**
 
 ---
 
